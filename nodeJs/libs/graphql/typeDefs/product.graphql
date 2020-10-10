@@ -1,0 +1,10 @@
+enum Status {
+    STOPPED, FROZEN, ACTIVE
+}
+
+type Product {
+    prodNum: Int
+    statusCode: Int
+    saleCode: Int
+    status: Status
+}

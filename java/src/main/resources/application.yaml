@@ -1,0 +1,18 @@
+---
+spring:
+  profiles: test
+
+  data:
+    mongodb:
+      host: eran.centos.com
+      port: 27018
+      database: users-db
+      username: ${MONGO_USER}
+      password: ${MONGO_PASS}
+      authentication-database: admin
+
+  graphql:
+    datetime:
+      scalars:
+        date:
+          format: yyyy-MM-dd'T'HH:mm:ss

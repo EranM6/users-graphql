@@ -1,0 +1,10 @@
+{
+  "dev": {
+    "mongo": {
+      "hosts": [ "eran.centos.com" ],
+      "port": "27018",
+      "database": "users-db",
+      "admin-db": "admin"
+    }
+  }
+}

@@ -1,0 +1,27 @@
+{
+  "name": "users",
+  "version": "0.0.0",
+  "private": true,
+  "scripts": {
+    "start": "node ./app"
+  },
+  "dependencies": {
+    "@graphql-tools/merge": "^6.0.12",
+    "@mongoosejs/double": "^0.2.0",
+    "cookie-parser": "~1.4.4",
+    "delay": "^4.4.0",
+    "express": "^4.17.1",
+    "express-graphql": "^0.9.0",
+    "express-pino-logger": "^5.0.0",
+    "graphql": "^15.0.0",
+    "graphql-import-node": "^0.0.4",
+    "graphql-tools": "^6.0.12",
+    "lightship": "^6.1.0",
+    "mongoose": "^5.10.3",
+    "morgan": "^1.10.0",
+    "pino": "^6.6.0"
+  },
+  "devDependencies": {
+    "pino-pretty": "^4.2.1"
+  }
+}
