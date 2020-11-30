@@ -14,7 +14,7 @@
     "mongo": {
       "hosts": [ "localhost" ],
       "port": "27017",
-      "database": "strapi-test",
+      "database": "test",
       "admin_db": "admin"
     }
   },

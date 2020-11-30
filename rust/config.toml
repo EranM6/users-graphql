@@ -1,0 +1,40 @@
+[envs.local]
+name = "Local"
+
+[envs.local.mongo]
+hosts = [ "mongodb" ]
+port = "27017"
+database = "user-info"
+
+[envs.dev]
+name = "Development"
+
+[envs.dev.mongo]
+hosts = [ "localhost" ]
+port = "27017"
+database = "user-info"
+adminDb = "admin"
+
+[envs.stage]
+name = "Stage"
+
+[envs.stage.mongo]
+hosts = ["172.22.64.29", "172.22.64.112"]
+port = "27017"
+database = "user-info"
+adminDb = "admin"
+rsName = "rs0"
+
+[envs.prod]
+name = "Production"
+
+[envs.prod.mongo]
+hosts = [
+    "172.22.80.25",
+    "172.22.80.29",
+    "172.22.80.28"
+]
+port = "27017"
+database = "user-info"
+adminDb = "user-info"
+rsName = "rs0"

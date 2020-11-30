@@ -1,58 +1,52 @@
-use mongodb::bson::{doc, document::Document, oid::ObjectId, Bson};
-use mongodb::{options::ClientOptions, Client, Collection, bson};
-use crate::configuration::Config;
-use std::env::VarError;
-use super::MongoError;
-use super::models::User;
-use std::sync::Arc;
-use std::rc::Rc;
-use mongodb::error::Error;
+use super::{MongoError, MongoConfig};
+use crate::models::User;
+use mongodb::bson::{doc, Bson};
+use mongodb::{Database, Collection};
+use mongodb::{bson, options::ClientOptions, Client};
+use tokio_stream::StreamExt;
 
 #[derive(Clone, Debug)]
 pub struct MongoDb {
     client: Client,
-    db_name: String,
+    db_name: String
 }
 
 impl MongoDb {
-    pub async fn init() -> Result<Self, MongoError> {
-        // let mut client_options = ClientOptions::parse(&get_conn_str()?).await?;
-        let mut client_options = ClientOptions::parse("mongodb://eranm:eranm6@localhost:27017").await?;
-        // dbg!(&client_options);
-        client_options.app_name = Some("users".to_string());
-        // let client = Client::with_options(client_options)?;
-
-        let client = mongodb::Client::with_uri_str(&get_conn_str()?).await?;
-        for name in client.list_database_names(None, None).await? {
-            println!("- {}", name);
-        }
+    pub async fn init(config: &MongoConfig) -> Result<Self, MongoError> {
+        let client_options = ClientOptions::parse(config.conn_url()?).await?;
+        let client = Client::with_options(client_options)?;
 
         Ok(Self {
             client,
-            db_name: String::from(&Config::current().conf.mongo.database)
+            db_name: String::from(config.db_name())
         })
     }
-
-    pub async fn user(&self) -> Result<User, MongoError> {
-        let courser = self
-            .get_collection()
-            .find_one(None, None)
-            .await?
-            .expect("user not found");
-
-        println!("{}", courser);
-
-        let result: User = bson::from_bson(Bson::Document(courser))?;
-
-        Ok(result)
+    async fn get_db(&self) -> Result<Database, MongoError> {
+        Ok(self.client.database(&self.db_name))
     }
 
-    fn get_collection(&self) -> Collection {
-        self.client.database(&self.db_name).collection("test")
-    }
-}
+    pub async fn random_user(&self) -> Result<Option<User>, MongoError> {
+        let pipeline = vec![doc! {
+          "$sample": {
+              "size": Bson::Int32(1)
+            }
+        }];
 
-fn get_conn_str() -> Result<String, VarError> {
-    let config = Config::current();
-    config.conf.mongo.conn_url()
+        let coll: Collection<User> = Self::get_db(self)
+            .await
+            .ok()
+            .unwrap().collection("users");
+
+        let mut results = coll.aggregate(pipeline, None)
+            .await?;
+
+        let mut users = vec![];
+
+        while let Some(doc) = results.next().await {
+            let user = bson::from_bson::<User>(Bson::Document(doc?))?;
+            users.push(user);
+        }
+
+        Ok(users.get(0).cloned())
+    }
 }
