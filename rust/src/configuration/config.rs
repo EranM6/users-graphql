@@ -5,16 +5,14 @@ use crate::mongo::mongo_config::MongoConfig;
 use crate::pubsub::PubSubConfig;
 use serde_json::Value;
 
-
-#[derive(Default, Debug, Serialize, Deserialize)]
-pub struct ConfigObj {
-    pub mongo: MongoConfig,
-    pub pubsub: PubSubConfig
-}
-
 #[derive(Default, Debug, Serialize, Deserialize)]
 pub struct Config {
-    pub conf: ConfigObj,
+    pub mongo: MongoConfig,
+    pub pubsub: PubSubConfig,
+}
+
+thread_local! {
+    static CURRENT_CONFIG: RwLock<Arc<Config>> = RwLock::new(Default::default());
 }
 
 impl Config {
@@ -22,7 +20,7 @@ impl Config {
         CURRENT_CONFIG.with(|c| c.read().unwrap().clone())
     }
 
-    pub fn init<T>(profile: String) {
+    pub fn init(profile: String) {
         let mut file = File::open(format!("{}/config.json", env!("CARGO_MANIFEST_DIR"))).expect("Unable to open file");
         let mut contents = String::new();
 
@@ -32,13 +30,8 @@ impl Config {
         let contents: Value = serde_json::from_str(&contents).unwrap();
         let x = &contents[&profile];
 
-        let config: ConfigObj = serde_json::from_str(&x.to_string()).unwrap();
+        let config: Self = serde_json::from_str(&x.to_string()).unwrap();
 
-        CURRENT_CONFIG.with(|c| *c.write().unwrap() = Arc::new(Self{ conf: config }))
-
+        CURRENT_CONFIG.with(|c| *c.write().unwrap() = Arc::new(config ))
     }
-}
-
-thread_local! {
-    static CURRENT_CONFIG: RwLock<Arc<Config>> = RwLock::new(Default::default());
 }

@@ -1,12 +1,10 @@
-use mongodb::bson::{doc, document::Document, oid::ObjectId, Bson};
-use mongodb::{options::ClientOptions, Client, Collection, bson};
+use mongodb::bson::{doc, Bson};
+use mongodb::{options::ClientOptions, Client, bson};
 use crate::configuration::Config;
 use std::env::VarError;
 use super::MongoError;
-use super::models::User;
-use std::sync::Arc;
-use std::rc::Rc;
-use mongodb::error::Error;
+use tokio::stream::StreamExt;
+use crate::mongo::models::User;
 
 #[derive(Clone, Debug)]
 pub struct MongoDb {
@@ -16,43 +14,44 @@ pub struct MongoDb {
 
 impl MongoDb {
     pub async fn init() -> Result<Self, MongoError> {
-        // let mut client_options = ClientOptions::parse(&get_conn_str()?).await?;
-        let mut client_options = ClientOptions::parse("mongodb://eranm:eranm6@localhost:27017").await?;
-        // dbg!(&client_options);
-        client_options.app_name = Some("users".to_string());
-        // let client = Client::with_options(client_options)?;
-
-        let client = mongodb::Client::with_uri_str(&get_conn_str()?).await?;
-        for name in client.list_database_names(None, None).await? {
-            println!("- {}", name);
-        }
+        #[cfg(debug_assertions)]
+        println!("{}", &get_conn_str()?);
+        let client_options = ClientOptions::parse(&get_conn_str()?).await?;
+        let client = Client::with_options(client_options)?;
 
         Ok(Self {
             client,
-            db_name: String::from(&Config::current().conf.mongo.database)
+            db_name: String::from(Config::current().mongo.db_name()),
         })
     }
 
     pub async fn user(&self) -> Result<User, MongoError> {
-        let courser = self
-            .get_collection()
-            .find_one(None, None)
+        // Multiple results (::find)
+        let mut courser = self
+            .client.database(&self.db_name).collection("users")
+            .find(Some(doc! {
+                "userMail": "amitzur@actcom.co.il"
+            }), None)
+            .await?;
+
+        while let Some(doc) = courser.next().await {
+            println!("{:?}", bson::from_bson::<User>(Bson::Document(doc?))?)
+        }
+
+        // Single result (::find_one)
+        let doc = self
+            .client.database(&self.db_name).collection("users")
+            .find_one(Some(doc! {}), None)
             .await?
-            .expect("user not found");
+            .ok_or(MongoError::NotFound);
 
-        println!("{}", courser);
-
-        let result: User = bson::from_bson(Bson::Document(courser))?;
+        let result = bson::from_bson(Bson::Document(doc?))?;
 
         Ok(result)
-    }
-
-    fn get_collection(&self) -> Collection {
-        self.client.database(&self.db_name).collection("test")
     }
 }
 
 fn get_conn_str() -> Result<String, VarError> {
     let config = Config::current();
-    config.conf.mongo.conn_url()
+    config.mongo.conn_url()
 }
