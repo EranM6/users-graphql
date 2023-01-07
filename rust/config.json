@@ -1,0 +1,71 @@
+{
+  "dev": {
+    "pubsub": {
+      "project_id": "snadbox-data",
+      "subscriptions": {
+        "registration": "projects/sandbox-data/subscriptions/sso-registration-dev",
+        "login": "projects/sandbox-data/subscriptions/sso-login-dev",
+        "confirmation": "projects/sandbox-data/subscriptions/user-confirmation-dev",
+        "abuse": "projects/sandbox-data/subscriptions/user-abuse-dev",
+        "purchase": "projects/sandbox-data/subscriptions/user-purchase-dev",
+        "update": "projects/sandbox-data/subscriptions/user-update-dev"
+      }
+    },
+    "mongo": {
+      "hosts": [ "localhost" ],
+      "port": "27017",
+      "database": "test",
+      "admin_db": "admin"
+    }
+  },
+  "stage": {
+    "pubsub": {
+      "project_id": "snadbox-data",
+      "subscriptions": {
+        "registration": "projects/sandbox-data/subscriptions/sso-registration",
+        "login": "projects/sandbox-data/subscriptions/sso-login",
+        "confirmation": "projects/sandbox-data/subscriptions/user-confirmation",
+        "abuse": "projects/sandbox-data/subscriptions/user-abuse",
+        "purchase": "projects/sandbox-data/subscriptions/user-purchase",
+        "update": "projects/sandbox-data/subscriptions/user-update"
+      }
+    },
+    "mongo": {
+      "hosts": [ "172.22.64.29", "172.22.64.112" ],
+      "port": "27017",
+      "database": "user-info",
+      "admin_db": "admin",
+      "rs_name": "rs0"
+    },
+    "services": {
+      "zipkin": "http://tracing.istio-system/api/v1/spans"
+    }
+  },
+  "prod": {
+    "pubsub": {
+      "project_id": "htz-common",
+      "subscriptions": {
+        "registration": "projects/htz-common/subscriptions/sso-registration",
+        "login": "projects/htz-common/subscriptions/sso-login",
+        "confirmation": "projects/htz-common/subscriptions/user-confirmation",
+        "abuse": "projects/htz-common/subscriptions/user-abuse",
+        "purchase": "projects/htz-common/subscriptions/user-purchase",
+        "update": "projects/htz-common/subscriptions/user-update"
+      }
+    },
+    "mongo": {
+      "hosts": [
+        "172.22.80.25",
+        "172.22.80.29",
+        "172.22.80.28"
+      ],
+      "port": "27017",
+      "database": "user-info",
+      "admin_db": "user-info",
+      "rs_name": "rs0"
+    },
+    "services": {
+      "zipkin": "http://tracing.istio-system/api/v1/spans"
+    }
+  }
+}
