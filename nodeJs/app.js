@@ -1,113 +1,56 @@
+require("./utils/tracer").init();
+
+const {ApolloServer} = require('@apollo/server');
+const {expressMiddleware} = require('@apollo/server/express4');
+const {ApolloServerPluginDrainHttpServer} = require('@apollo/server/plugin/drainHttpServer');
 const express = require('express');
 const http = require('http');
-const pino = require('pino');
-const expressPino = require('express-pino-logger');
-const cookieParser = require('cookie-parser');
-const delay = require('delay');
-const {createLightship,} = require('lightship');
+const cors = require('cors');
+const bodyParser = require('body-parser');
+const {typeDefs, resolvers} = require('./schema');
+const UserAPI = require("./data-source/userApi");
 
-const mongo = require('./libs/mongo');
-const graphql = require('./libs/graphql');
-
-const config = require('./config')[process.env.PROFILE || 'dev'];
-
-const logger = pino({
-  level: process.env.LOG_LEVEL || 'info',
-  prettyPrint: {
-    ignore: 'pid,hostname',
-    translateTime: 'SYS:standard',
-    colorize: !process.env.PROFILE || process.env.PROFILE === 'dev'
-  }
-});
-const expressLogger = expressPino({logger});
-
-global.logger = logger;
-
+// Required logic for integrating with Express
 const app = express();
-const lightship = createLightship();
-app.use('/graphql', graphql);
+// Our httpServer handles incoming requests to our Express app.
+// Below, we tell Apollo Server to "drain" this httpServer,
+// enabling our servers to shut down gracefully.
+const httpServer = http.createServer(app);
 
-app.use(expressLogger);
-app.use(express.json());
-app.use(express.urlencoded({extended: false}));
-app.use(cookieParser());
-
-const port = normalizePort(process.env.PORT || '3000');
-app.set('port', port);
-
-const server = http.createServer(app);
-
-server.on('error', onError);
-server.on('listening', onListening);
-
-const runningServer = server.listen(port);
-
-lightship.registerShutdownHandler(async () => {
-  // Allow sufficient amount of time to allow all of the existing
-  // HTTP requests to finish before terminating the service.
-  await delay(60 * 1000);
-
-  runningServer.close();
+// Same ApolloServer initialization as before, plus the drain plugin
+// for our httpServer.
+const server = new ApolloServer({
+    typeDefs,
+    resolvers,
+    plugins: [ApolloServerPluginDrainHttpServer({httpServer})],
 });
+// Ensure we wait for our server to start
+server.start()
+    .then(() => {
+        // Set up our Express middleware to handle CORS, body parsing,
+// and our expressMiddleware function.
+        app.use(
+            '/',
+            cors(),
+            bodyParser.json(),
+            // expressMiddleware accepts the same arguments:
+            // an Apollo Server instance and optional configuration options
+            expressMiddleware(server, {
+                context: async ({req}) => {
+                    const {cache} = server;
+                    return {
+                        token: req.headers.token,
+                        dataSources: {
+                            userAPI: new UserAPI({cache}),
+                        },
+                    }
+                },
+            }),
+        );
 
-mongo(config.mongo, lightship)
+// Modified server startup
+        httpServer.listen({port: 3000}, () => {
+            console.log(`🚀 Server ready at http://localhost:4000/`);
+        });
+    });
 
-/**
- * Normalize a port into a number, string, or false.
- */
-
-function normalizePort(val) {
-  const port = parseInt(val, 10);
-
-  if (isNaN(port)) {
-    // named pipe
-    return val;
-  }
-
-  if (port >= 0) {
-    // port number
-    return port;
-  }
-
-  return false;
-}
-
-/**
- * Event listener for HTTP server "error" event.
- */
-
-function onError(error) {
-  if (error.syscall !== 'listen') {
-    throw error;
-  }
-
-  const bind = typeof port === 'string'
-    ? 'Pipe ' + port
-    : 'Port ' + port;
-
-  // handle specific listen errors with friendly messages
-  switch (error.code) {
-    case 'EACCES':
-      logger.error(bind + ' requires elevated privileges');
-      process.exit(1);
-      break;
-    case 'EADDRINUSE':
-      logger.error(bind + ' is already in use');
-      process.exit(1);
-      break;
-    default:
-      throw error;
-  }
-}
-
-/**
- * Event listener for HTTP server "listening" event.
- */
-
-function onListening() {
-  const addr = server.address();
-  const bind = typeof addr === 'string'
-    ? 'pipe ' + addr
-    : 'port ' + addr.port;
-  logger.debug('Listening on ' + bind);
-}

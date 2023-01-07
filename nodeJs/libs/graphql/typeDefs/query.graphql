@@ -1,4 +1,0 @@
-type Query {
-    getUserById(id: String!): User
-    getUserByMail(mail: String!): User
-}

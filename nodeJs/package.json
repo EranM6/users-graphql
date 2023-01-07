@@ -1,27 +1,40 @@
 {
-  "name": "users",
+  "name": "graphql",
   "version": "0.0.0",
   "private": true,
   "scripts": {
-    "start": "node ./app"
+    "start": "node ./app.js"
   },
   "dependencies": {
-    "@graphql-tools/merge": "^6.0.12",
-    "@mongoosejs/double": "^0.2.0",
+    "@apollo/datasource-rest": "^4.3.2",
+    "@apollo/server": "^4.1.1",
+    "@graphql-tools/merge": "^8.3.11",
+    "@opentelemetry/api": "^1.2.0",
+    "@opentelemetry/auto-instrumentations-node": "^0.34.0",
+    "@opentelemetry/core": "^1.7.0",
+    "@opentelemetry/exporter-trace-otlp-http": "^0.33.0",
+    "@opentelemetry/instrumentation": "^0.33.0",
+    "@opentelemetry/instrumentation-graphql": "^0.32.0",
+    "@opentelemetry/instrumentation-http": "^0.33.0",
+    "@opentelemetry/instrumentation-mongodb": "^0.32.2",
+    "@opentelemetry/instrumentation-pino": "^0.32.1",
+    "@opentelemetry/propagator-b3": "^1.7.0",
+    "@opentelemetry/propagator-jaeger": "^1.7.0",
+    "@opentelemetry/resources": "^1.7.0",
+    "@opentelemetry/sdk-node": "^0.33.0",
+    "@opentelemetry/sdk-trace-base": "^1.7.0",
+    "@opentelemetry/sdk-trace-node": "^1.7.0",
+    "@opentelemetry/semantic-conventions": "^1.7.0",
+    "body-parser": "^1.20.1",
     "cookie-parser": "~1.4.4",
-    "delay": "^4.4.0",
-    "express": "^4.17.1",
-    "express-graphql": "^0.9.0",
-    "express-pino-logger": "^5.0.0",
-    "graphql": "^15.0.0",
-    "graphql-import-node": "^0.0.4",
-    "graphql-tools": "^6.0.12",
-    "lightship": "^6.1.0",
-    "mongoose": "^5.10.3",
-    "morgan": "^1.10.0",
-    "pino": "^6.6.0"
+    "debug": "~2.6.9",
+    "express": "~4.16.1",
+    "graphql": "^16.6.0",
+    "graphql-import-node": "^0.0.5",
+    "morgan": "~1.9.1",
+    "pino": "^8.7.0"
   },
   "devDependencies": {
-    "pino-pretty": "^4.2.1"
+    "pino-pretty": "^9.1.1"
   }
 }
